@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Announcement Studio</title>
+<style>
+:root{--bg:#14161b;--p:#1c1f26;--l:#2b303a;--t:#e7e9ee;--m:#8e96a6;--a:#6f7cf5}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--t);font:15px/1.5 'Segoe UI',system-ui,sans-serif}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 24px;border-bottom:1px solid var(--l)}
+header a{color:var(--m)}
+main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,420px);gap:24px;padding:24px;max-width:1200px;margin:auto}
+@media(max-width:900px){main{grid-template-columns:1fr}}
+section{background:var(--p);border:1px solid var(--l);border-radius:8px;padding:16px;margin-bottom:16px}
+h1{font-size:18px;margin:0}h2{font-size:15px;margin:0 0 8px}
+label{display:block;color:var(--m);font-size:13px;margin:10px 0 4px}
+input,select,textarea,button{font:inherit;color:inherit;background:#101216;border:1px solid var(--l);border-radius:6px;padding:8px 10px;width:100%}
+textarea{min-height:90px;resize:vertical}
+input[type=color]{padding:2px;height:38px}
+input[type=checkbox]{width:auto}
+button{cursor:pointer;background:var(--a);border-color:var(--a);color:#fff;font-weight:600}
+button.ghost{background:transparent;border-color:var(--l);color:var(--m);width:auto}
+:focus-visible{outline:2px solid var(--a);outline-offset:1px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;max-height:220px;overflow:auto;margin-top:8px}
+.chip{width:auto;background:transparent;border-color:var(--l);font-weight:400;display:flex;gap:6px;align-items:center}
+.chip[aria-pressed=true]{border-color:var(--a);background:#6f7cf522}
+.dot{width:10px;height:10px;border-radius:50%}
+.row{display:flex;gap:6px;margin-bottom:6px;align-items:center}
+.row input[type=text],.row input:not([type]),.row input[type=url]{flex:1;min-width:0}
+.chk{display:flex;gap:6px;align-items:center;margin:8px 0 0;color:var(--t)}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#pv{position:sticky;top:16px}
+.msg{background:#313338;border-radius:8px;padding:14px;font-size:14px;white-space:pre-wrap;word-break:break-word;min-height:60px}
+.ping{background:#5865f233;border-radius:3px;padding:0 3px}
+.emb{margin-top:8px;background:#2b2d31;border-left:4px solid;border-radius:4px;padding:10px 12px;display:grid;gap:6px;white-space:pre-wrap}
+.emb img{max-width:100%;border-radius:4px}.emb .th{max-width:70px;justify-self:end}
+.fl{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.fl .full{grid-column:1/-1}
+.btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.btns span{background:#4e5058;border-radius:4px;padding:4px 12px;font-size:13px}
+#st{min-height:22px;margin-top:8px}
+.warn{background:#4a3a14;border:1px solid #8a6d1f;border-radius:6px;padding:8px 10px;font-size:13px;margin-top:10px}
+.login{max-width:360px;margin:15vh auto;text-align:center;padding:0 16px}
+#lerr{color:#ff8a8a;min-height:22px;margin-top:8px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+
+<div class="login" id="login" hidden>
+  <h1>Announcement Studio</h1>
+  <p style="color:var(--m)">Enter the dashboard password.</p>
+  <input type="password" id="pw" placeholder="Password" autocomplete="current-password">
+  <button id="go" style="margin-top:10px">Sign in</button>
+  <div id="lerr" role="alert"></div>
+</div>
+
+<div id="app" hidden>
+<header><h1 id="srv">Announcement Studio</h1><a href="/auth/logout">Sign out</a></header>
+<main>
+<div>
+  <section>
+    <h2>Where to post</h2>
+    <label for="ch">Channel</label><select id="ch"></select>
+    <label for="rs">Roles to ping (click to select, search to filter)</label>
+    <input id="rs" placeholder="Search roles…">
+    <div class="chips" id="roles"></div>
+    <div class="warn" id="warn" hidden>The bot does not have the "Mention Everyone" permission. Roles that are not set to "Allow anyone to @mention" will NOT ping until you give the bot that permission.</div>
+    <label class="chk"><input type="checkbox" id="ev"> Also ping @everyone</label>
+  </section>
+  <section>
+    <h2>Message</h2>
+    <label for="msg">Text above the embed</label><textarea id="msg" placeholder="Supports Discord formatting: **bold**, *italic*"></textarea>
+  </section>
+  <section>
+    <label class="chk" style="margin:0 0 6px"><input type="checkbox" id="emb" checked> <strong>Use an embed</strong></label>
+    <div id="embBox">
+      <label for="t">Title</label><input id="t">
+      <label for="d">Description</label><textarea id="d"></textarea>
+      <div class="cols">
+        <div><label for="col">Color</label><input type="color" id="col" value="#5865f2"></div>
+        <div><label for="u">Title link (optional)</label><input id="u" type="url" placeholder="https://"></div>
+        <div><label for="au">Author</label><input id="au"></div>
+        <div><label for="ft">Footer</label><input id="ft"></div>
+        <div><label for="th">Small image URL</label><input id="th" type="url" placeholder="https://"></div>
+        <div><label for="im">Large image URL</label><input id="im" type="url" placeholder="https://"></div>
+      </div>
+      <label class="chk"><input type="checkbox" id="ts"> Show the time it was sent</label>
+      <label>Fields</label><div id="fl"></div><button class="ghost" id="addF">Add field</button>
+    </div>
+  </section>
+  <section>
+    <h2>Link buttons</h2>
+    <div id="bl"></div><button class="ghost" id="addB">Add button</button>
+  </section>
+  <button id="send">Send announcement</button>
+  <div id="st" role="status" aria-live="polite"></div>
+</div>
+<aside><section id="pv"><h2>Preview</h2><div class="msg" id="pvm"></div></section></aside>
+</main>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+const roles = new Set(), fields = [], buttons = [];
+let D = { roles: [] };
+
+async function api(path, opt) {
+  const r = await fetch(path, opt), j = await r.json().catch(() => ({}));
+  if (!r.ok) throw Object.assign(new Error(j.error || 'Request failed (' + r.status + ')'), { status: r.status });
+  return j;
+}
+
+function list(box, arr, keys, ph, inline) {
+  box.innerHTML = '';
+  arr.forEach((o, i) => {
+    const r = el('div', 'row');
+    keys.forEach((k, j) => { const x = el('input'); x.placeholder = ph[j]; x.value = o[k] || ''; x.oninput = () => { o[k] = x.value; draw(); }; r.append(x); });
+    if (inline) { const l = el('label', 'chk'), c = el('input'); c.type = 'checkbox'; c.checked = !!o.inline; c.onchange = () => { o.inline = c.checked; draw(); }; l.append(c, 'Inline'); r.append(l); }
+    const d = el('button', 'ghost', 'Remove'); d.onclick = () => { arr.splice(i, 1); list(box, arr, keys, ph, inline); draw(); };
+    r.append(d); box.append(r);
+  });
+}
+const redraw = () => { list($('#fl'), fields, ['name', 'value'], ['Field title', 'Field text'], true); list($('#bl'), buttons, ['label', 'url'], ['Button label', 'https://…']); draw(); };
+
+function state() {
+  const g = id => $('#' + id).value;
+  return {
+    channelId: g('ch'), everyone: $('#ev').checked, roleIds: [...roles], content: g('msg'), buttons,
+    embed: $('#emb').checked ? { title: g('t'), description: g('d'), color: g('col'), url: g('u'), author: g('au'), footer: g('ft'), thumbnail: g('th'), image: g('im'), timestamp: $('#ts').checked, fields } : null
+  };
+}
+
+function draw() {
+  const s = state(), box = $('#pvm'); box.innerHTML = '';
+  $('#embBox').hidden = !s.embed;
+  if (s.everyone) box.append(el('span', 'ping', '@everyone'), ' ');
+  s.roleIds.forEach(id => { const r = D.roles.find(x => x.id === id); const p = el('span', 'ping', '@' + (r ? r.name : id)); if (r && r.color !== '#000000') p.style.color = r.color; box.append(p, ' '); });
+  if (s.content) box.append(s.content);
+  if (s.embed) {
+    const e = el('div', 'emb'); e.style.borderColor = s.embed.color;
+    if (s.embed.author) e.append(el('small', '', s.embed.author));
+    if (s.embed.title) { const t = el('strong', '', s.embed.title); t.style.color = s.embed.url ? '#00a8fc' : ''; e.append(t); }
+    if (s.embed.description) e.append(el('div', '', s.embed.description));
+    const fl = el('div', 'fl');
+    fields.filter(f => f.name && f.value).forEach(f => { const x = el('div', f.inline ? '' : 'full'); x.append(el('strong', '', f.name), el('div', '', f.value)); fl.append(x); });
+    if (fl.children.length) e.append(fl);
+    if (/^https?:\/\//.test(s.embed.thumbnail)) { const i = el('img', 'th'); i.src = s.embed.thumbnail; e.append(i); }
+    if (/^https?:\/\//.test(s.embed.image)) { const i = el('img'); i.src = s.embed.image; e.append(i); }
+    const foot = [s.embed.footer, s.embed.timestamp ? 'Today at ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''].filter(Boolean).join(' • ');
+    if (foot) e.append(el('small', '', foot));
+    box.append(e);
+  }
+  const b = buttons.filter(x => x.label && /^https?:\/\//.test(x.url));
+  if (b.length) { const w = el('div', 'btns'); b.forEach(x => w.append(el('span', '', x.label + ' ↗'))); box.append(w); }
+}
+
+async function init() {
+  try {
+    await api('/api/me');
+  } catch (e) {
+    $('#login').hidden = false;
+    return;
+  }
+  try {
+    D = await api('/api/data');
+    $('#srv').textContent = D.server + ' · Announcement Studio';
+    $('#warn').hidden = D.canMentionAll;
+    D.channels.forEach(c => $('#ch').append(new Option('#' + c.name, c.id)));
+    D.roles.forEach(r => {
+      const b = el('button', 'chip'); b.dataset.name = r.name.toLowerCase(); b.setAttribute('aria-pressed', 'false');
+      const d = el('span', 'dot'); d.style.background = r.color === '#000000' ? '#8e96a6' : r.color; b.append(d, r.name);
+      b.onclick = () => { roles.has(r.id) ? roles.delete(r.id) : roles.add(r.id); b.setAttribute('aria-pressed', roles.has(r.id)); draw(); };
+      $('#roles').append(b);
+    });
+    $('#app').hidden = false; redraw();
+  } catch (e) {
+    $('#login').hidden = false;
+    $('#lerr').textContent = 'Logged in, but could not load your server: ' + e.message + ' (check GUILD_ID and that the bot is in the server)';
+  }
+}
+
+$('#rs').oninput = () => { const q = $('#rs').value.toLowerCase(); document.querySelectorAll('#roles .chip').forEach(c => c.hidden = !c.dataset.name.includes(q)); };
+document.querySelectorAll('#app input,#app textarea,#app select').forEach(x => { x.addEventListener('input', draw); x.addEventListener('change', draw); });
+$('#addF').onclick = () => { fields.push({}); redraw(); };
+$('#addB').onclick = () => { if (buttons.length < 5) { buttons.push({}); redraw(); } };
+
+$('#send').onclick = async () => {
+  const s = state(), st = $('#st');
+  if (s.everyone && !confirm('This will ping @everyone. Send it?')) return;
+  st.textContent = 'Sending…';
+  try {
+    await api('/api/send', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(s) });
+    st.textContent = 'Sent to #' + $('#ch').selectedOptions[0].textContent.slice(1) + '.';
+  } catch (e) { st.textContent = e.status === 401 ? 'Session expired. Reload the page and sign in again.' : 'Error: ' + e.message; }
+};
+
+$('#go').onclick = async () => {
+  $('#lerr').textContent = 'Checking…';
+  try {
+    await api('/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: $('#pw').value }) });
+    location.reload();
+  } catch (e) { $('#lerr').textContent = e.message; }
+};
+$('#pw').addEventListener('keydown', e => { if (e.key === 'Enter') $('#go').click(); });
+
+init();
+</script>
+</body>
+</html>
